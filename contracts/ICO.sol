@@ -2,80 +2,108 @@
 
 pragma solidity ^0.8.0;
 
-interface ERC20 {
-    function totalSupply() external view returns (uint);
-    function balanceOf(address _tokenOwner) external view returns (uint balance);
-    function transfer(address _to, uint _tokens) external returns (bool success);
-    function allowance(address _tokenOwner, address _spender) external view returns (uint remaining);
-    function approve(address _spender, uint _tokens) external returns (bool success);
-    function transferFrom(address _from, address _to, uint _tokens) external returns (bool success);
+import "./ZCC.sol";
+
+contract ICO is ZrinCinCoin {
+    address public manager;
+    address payable public deposit;
     
-    event Transfer(address indexed _from, address indexed _to, uint _tokens);
-    event Approval(address indexed _tokenOwner, address indexed _spender, uint _tokens);
-}
-
-
-contract ZrinCinCoin is ERC20 {
-
-    string public name = "ZrinCinCoin";
-    string public symbol = "ZCC";
-    uint public decimals = 5;
-    uint public tokenTotalSupply;
-
-    address public creator;
-    mapping(address => uint) balances;
-    mapping(address => mapping(address => uint)) allowances;
-
-
-    constructor() {
-        tokenTotalSupply = 1000000;
-        creator = msg.sender;
-        balances[creator] = tokenTotalSupply;
-    }
+    uint tokenPrice = 0.01 ether;  
+    uint public goal = 7000 ether;
+    uint public raisedAmount; 
+    uint public saleStart = block.timestamp;
+    uint public saleEnd = block.timestamp + 259200;    
+    uint public minInvestment = 0.01 ether;
     
-    function totalSupply() public view override returns (uint) {
-        return tokenTotalSupply;
+    uint public tokenTradeStart = saleEnd + 864000; 
+
+    
+    enum State { NOT_STARTED, RUNNING, ENDED, SUSPENDED} 
+    State public ICOState;
+
+    modifier managerOnly() {
+        require(msg.sender == manager);
+        _;
     }
 
-    function balanceOf(address _tokenOwner) public view override returns (uint balance) {
-        return balances[_tokenOwner];
+    constructor(address payable _deposit) {
+        deposit = _deposit;
+        manager = msg.sender;
+        ICOState = State.NOT_STARTED;
     }
 
-    function transfer(address _to, uint _tokens) public override returns (bool success) {
-        require(balances[msg.sender] >= _tokens);
+    receive() payable external {
+        invest();
+    }
 
-        balances[msg.sender] -= _tokens;
-        balances[_to] += _tokens;
+    event Invest(address _investor, uint _value, uint _tokens);
 
-        emit Transfer(msg.sender, _to, _tokens);
-
+    function invest() payable public returns (bool) { 
+        ICOState = getCurrentState();
+        require(ICOState == State.RUNNING);
+        require(msg.value >= minInvestment);
+        
+        raisedAmount += msg.value;
+        require(raisedAmount <= goal);
+        
+        uint tokens = msg.value / tokenPrice;
+ 
+      
+        balances[msg.sender] += tokens;
+        balances[creator] -= tokens; 
+        deposit.transfer(msg.value); 
+        
+        emit Invest(msg.sender, msg.value, tokens);
+        
         return true;
     }
 
-    function allowance(address _tokenOwner, address _spender) public view override returns (uint remaining) {
-        return allowances[_tokenOwner][_spender];
-    }
-
-    function approve(address _spender, uint _tokens) public override returns (bool success) {
-        require(_tokens > 0);
-        require(balances[msg.sender] >= _tokens);
-
-        allowances[msg.sender][_spender] = _tokens;
-
-        emit Approval(msg.sender, _spender, _tokens);
-
+    function transfer(address _to, uint _tokens) public override returns (bool success) {
+        require(block.timestamp > tokenTradeStart);
+     
+        ZrinCinCoin.transfer(_to, _tokens); 
+        
         return true;
     }
 
     function transferFrom(address _from, address _to, uint _tokens) public override returns (bool success) {
-        require(balances[_from] >= _tokens);
-        require(allowances[_from][_to] >= _tokens);
-
-        balances[_from] -= _tokens;
-        balances[_to] += _tokens;
-        allowances[_from][_to] -= _tokens;
+        require(block.timestamp > tokenTradeStart); 
+       
+        ZrinCinCoin.transferFrom(_from, _to, _tokens); 
 
         return true;
     }
 
+    function getCurrentState() public view returns (State) {
+        if (ICOState == State.SUSPENDED){
+            return State.SUSPENDED;
+        } else if (block.timestamp < saleStart) {
+            return State.NOT_STARTED;
+        } else if (block.timestamp >= saleStart && block.timestamp <= saleEnd) {
+            return State.RUNNING;
+        } else {
+            return State.ENDED;
+        }
+    }
+
+    function stopICO() public managerOnly {
+        ICOState = State.SUSPENDED;
+    }
+
+    function resumeICO() public managerOnly {
+        ICOState = State.RUNNING;
+    }
+
+    function changeDepositAddress(address payable _newDeposit) public managerOnly {
+        deposit = _newDeposit;
+    }
+
+     function burnTokens() public returns (bool) {
+        ICOState = getCurrentState();
+        require(ICOState == State.ENDED);
+        
+        balances[creator] = 0;
+        
+        return true;
+    }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./IERC20.sol";
 
+// deployed at 0x23bA238a1e52a3dFD204069cb1e9027fcBeB40Ba (Ropsten)
 
 contract ZrinCinCoin is ERC20 {
 

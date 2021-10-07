@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import "./ZCC.sol";
 
+// deployed at 0x54c77F7b5c329D7ec7eDd3005DEf3d30B086a20e (Ropsten)
+
 contract ICO is ZrinCinCoin {
     address public manager;
     address payable public deposit;

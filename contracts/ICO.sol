@@ -4,18 +4,19 @@ pragma solidity ^0.8.0;
 
 import "./ZCC.sol";
 
-// deployed at 0x54c77F7b5c329D7ec7eDd3005DEf3d30B086a20e (Ropsten)
+// deployed at 0xdb79ecBC4C32C6C08f9F901d0cA8f3b2D65761fd (Ropsten)
 
 contract ICO is ZrinCinCoin {
     address public manager;
     address payable public deposit;
     
     uint tokenPrice = 0.01 ether;  
-    uint public goal = 7000 ether;
+    uint public goal = 10000 ether; // 100% of the total supply
     uint public raisedAmount; 
     uint public saleStart = block.timestamp;
     uint public saleEnd = block.timestamp + 259200;    
-    uint public minInvestment = 0.01 ether;
+    uint public minInvestment = 0.1 ether;
+    uint public maxInvestment = 5 ether;
     
     uint public tokenTradeStart = saleEnd + 864000; 
 
@@ -43,7 +44,7 @@ contract ICO is ZrinCinCoin {
     function invest() payable public returns (bool) { 
         ICOState = getCurrentState();
         require(ICOState == State.RUNNING);
-        require(msg.value >= minInvestment);
+        require(msg.value >= minInvestment && msg.value <= maxInvestment);
         
         raisedAmount += msg.value;
         require(raisedAmount <= goal);

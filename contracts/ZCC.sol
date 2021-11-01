@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 
 import "./IERC20.sol";
 
-// deployed at 0x23bA238a1e52a3dFD204069cb1e9027fcBeB40Ba (Ropsten)
+// deployed at 0xdf760F30aE6D29a190596c668a346837a2509549 (Ropsten)
 
 contract ZrinCinCoin is ERC20 {
 
-    string public name = "ZrinCinCoin";
+    string public constant name = "ZrinCinCoin";
     string public symbol = "ZCC";
     uint public decimals = 5;
-    uint public tokenTotalSupply;
+    uint tokenTotalSupply;
 
     address public creator;
     mapping(address => uint) balances;
@@ -19,7 +19,7 @@ contract ZrinCinCoin is ERC20 {
 
 
     constructor() {
-        tokenTotalSupply = 1000000;
+        tokenTotalSupply = 100000000000; // 1 million tokens (with 5 decimals)
         creator = msg.sender;
         balances[creator] = tokenTotalSupply;
     }
@@ -60,11 +60,11 @@ contract ZrinCinCoin is ERC20 {
 
     function transferFrom(address _from, address _to, uint _tokens) public virtual override returns (bool success) {
         require(balances[_from] >= _tokens);
-        require(allowances[_from][_to] >= _tokens);
+        require(allowances[_from][msg.sender] >= _tokens);
 
         balances[_from] -= _tokens;
         balances[_to] += _tokens;
-        allowances[_from][_to] -= _tokens;
+        allowances[_from][msg.sender] -= _tokens;
 
         return true;
     }

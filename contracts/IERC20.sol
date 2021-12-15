@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-interface ERC20 {
+interface IERC20 {
+    
     function totalSupply() external view returns (uint);
     function balanceOf(address _tokenOwner) external view returns (uint balance);
     function transfer(address _to, uint _tokens) external returns (bool success);

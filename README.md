@@ -1,4 +1,4 @@
 # ICO
 Initial Coin Offering smart contract for the "ZrinCinCoin"
 
-deployed to "Rinkeby" Ethereum testnet @ 0xD59ce0Eb97410EDd5fad28f13409c9A490109Da6
+deployed to "Rinkeby" Ethereum testnet @ 0x42CFA184dc8468f67cf2B0D5F2a427325817608d
